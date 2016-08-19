@@ -28,6 +28,8 @@ import com.google.common.collect.Lists;
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.db.filter.ColumnSlice;
 import org.apache.cassandra.db.marshal.AbstractType;
+import org.apache.cassandra.db.marshal.AbstractCompositeType;
+import org.apache.cassandra.db.marshal.CompositeType;
 import org.apache.cassandra.utils.Allocator;
 
 /**
@@ -42,6 +44,9 @@ public class ArrayBackedSortedColumns extends AbstractThreadUnsafeSortedColumns
     private final boolean reversed;
     private final ArrayList<Column> columns;
 
+    private static final Logger logger = LoggerFactory.getLogger(ArrayBackedSortedColumns.class);
+    private final ArrayList<ByteBuffer> colTracing;
+
     public static final ColumnFamily.Factory<ArrayBackedSortedColumns> factory = new Factory<ArrayBackedSortedColumns>()
     {
         public ArrayBackedSortedColumns create(CFMetaData metadata, boolean insertReversed)
@@ -55,6 +60,7 @@ public class ArrayBackedSortedColumns extends AbstractThreadUnsafeSortedColumns
         super(metadata);
         this.reversed = reversed;
         this.columns = new ArrayList<Column>();
+        this.colTracing = new ArrayList<ByteBuffer>();
     }
 
     private ArrayBackedSortedColumns(Collection<Column> columns, CFMetaData metadata, boolean reversed)
@@ -62,6 +68,7 @@ public class ArrayBackedSortedColumns extends AbstractThreadUnsafeSortedColumns
         super(metadata);
         this.reversed = reversed;
         this.columns = new ArrayList<Column>(columns);
+        this.colTracing = new ArrayList<ByteBuffer>();
     }
 
     public ColumnFamily.Factory getFactory()
@@ -102,6 +109,68 @@ public class ArrayBackedSortedColumns extends AbstractThreadUnsafeSortedColumns
      */
     public void addColumn(Column column, Allocator allocator)
     {
+//        logger.info("Entered add function in ArrayBackedSortedColumns");
+
+        String CFName = metadata.cfName;
+        ByteBuffer name = column.name;
+//        logger.info("CFName : {}", CFName);
+//        logger.info("Column Name : {}", name.hashCode());
+
+        if(metadata.getReplacementOrdering() >= 0)
+        {
+//            logger.info("ReplacementOrdering is greater or equal to 0 .");
+
+            List<AbstractCompositeType.CompositeComponent> columnList = new ArrayList<AbstractCompositeType.CompositeComponent>();
+            ByteBuffer replacementKey = ByteBuffer.allocate(name.capacity());
+
+//            logger.info("Comparator Name : {}", new String(metadata.comparator.toString().trim()));
+            CompositeType composite = (CompositeType)metadata.comparator;
+//            logger.info("composite.getString(name) : {}", new String(composite.getString(name)));
+
+            columnList = composite.deconstructForReplacement(name, metadata.getReplacementOrdering(), metadata.getReplacementPriority(), metadata.getReplacementCql());
+//            logger.info("Components Size : {}", columnList.size());
+
+            replacementKey = composite.replacementKey;
+            column.orderingPriority = columnList;
+
+
+            int colPos = colTracing.indexOf(replacementKey);
+//            logger.info("Existing ColPos : {}", colPos);
+            if(colPos != -1)
+            {
+                Column existingColumn = columns.get(colPos);
+//                logger.info("Existing Column : {}", new String(existingColumn.name.array()));
+//                logger.info("Comparison : {}", column.orderingPriority.get(0).value.compareTo(existingColumn.orderingPriority.get(0).value));
+
+                //if(column.orderingPriority.get(0).comparator.compose(column.orderingPriority.get(0).value).compareTo(existingColumn.orderingPriority.get(0).comparator.compose(existingColumn.orderingPriority.get(0).value)) < 0)
+                for(int i=0; i < column.orderingPriority.size(); i++)
+                {
+                    if(column.orderingPriority.get(i).comparator.compare(column.orderingPriority.get(i).value, existingColumn.orderingPriority.get(i).value) < 0)
+                    {
+//                        logger.info("Dropping the current update");
+                        return;
+                    }
+                    if(column.orderingPriority.get(i).comparator.compare(column.orderingPriority.get(i).value, existingColumn.orderingPriority.get(i).value) > 0)
+                    {
+//                        logger.info("replacing existing column with new column");
+                        int index = columns.indexOf(existingColumn);
+                        int localDeletionTime = (int) (System.currentTimeMillis() / 1000);
+//                        logger.info("existing Column Timestamp :{}", existingColumn.timestamp);
+//                        logger.info("Current Column Timestamp :{}", column.timestamp);
+                        //addTombstone(existingColumn.name, localDeletionTime, column.timestamp);
+                        //addTombstoneForReplacement(new DeletedColumn(existingColumn.name, localDeletionTime, column.timestamp));
+                        if(index != -1)
+                        {
+                            columns.set(index, column);
+                            return;
+                        }
+
+                    }
+                }
+            }
+            colTracing.add(replacementKey);
+        }
+
         if (columns.isEmpty())
         {
             columns.add(column);
