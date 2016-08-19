@@ -75,6 +75,9 @@ public final class CFMetaData
     private static final Logger logger = LoggerFactory.getLogger(CFMetaData.class);
 
     public final static double DEFAULT_READ_REPAIR_CHANCE = 0.1;
+    public final static int DEFAULT_REPLACEMENT_ORDERING = -1;
+    public final static int DEFAULT_REPLACEMENT_PRIORITY = -1;
+    public final static int DEFAULT_REPLACEMENT_CQL = -1;
     public final static double DEFAULT_DCLOCAL_READ_REPAIR_CHANCE = 0.0;
     public final static boolean DEFAULT_REPLICATE_ON_WRITE = true;
     public final static int DEFAULT_GC_GRACE_SECONDS = 864000;
@@ -138,6 +141,9 @@ public final class CFMetaData
                                                                     + "populate_io_cache_on_flush boolean,"
                                                                     + "index_interval int,"
                                                                     + "dropped_columns map<text, bigint>,"
+                                                                    + "replacement_ordering int,"
+                                                                    + "replacement_priority int,"
+                                                                    + "replacement_cql int,"
                                                                     + "PRIMARY KEY (keyspace_name, columnfamily_name)"
                                                                     + ") WITH COMMENT='ColumnFamily definitions' AND gc_grace_seconds=8640");
 
@@ -354,6 +360,9 @@ public final class CFMetaData
     //OPTIONAL
     private volatile String comment = "";
     private volatile double readRepairChance = DEFAULT_READ_REPAIR_CHANCE;
+    private volatile int replacement_ordering = DEFAULT_REPLACEMENT_ORDERING;
+    private volatile int replacement_priority = DEFAULT_REPLACEMENT_PRIORITY;
+    private volatile int replacement_cql = DEFAULT_REPLACEMENT_CQL;
     private volatile double dcLocalReadRepairChance = DEFAULT_DCLOCAL_READ_REPAIR_CHANCE;
     private volatile boolean replicateOnWrite = DEFAULT_REPLICATE_ON_WRITE;
     private volatile int gcGraceSeconds = DEFAULT_GC_GRACE_SECONDS;
@@ -400,6 +409,9 @@ public final class CFMetaData
 
     public CFMetaData comment(String prop) { comment = enforceCommentNotNull(prop); return this;}
     public CFMetaData readRepairChance(double prop) {readRepairChance = prop; return this;}
+    public CFMetaData replacementOrdering(int prop) {replacement_ordering = prop; return this;}
+    public CFMetaData replacementPriority(int prop) {replacement_priority = prop; return this;}
+    public CFMetaData replacementCql(int prop) {replacement_cql = prop; return this;}
     public CFMetaData dcLocalReadRepairChance(double prop) {dcLocalReadRepairChance = prop; return this;}
     public CFMetaData replicateOnWrite(boolean prop) {replicateOnWrite = prop; return this;}
     public CFMetaData gcGraceSeconds(int prop) {gcGraceSeconds = prop; return this;}
@@ -491,6 +503,9 @@ public final class CFMetaData
 
         return newCFMD.comment(comment)
                 .readRepairChance(0)
+                .replacementOrdering(-1)
+                .replacementPriority(-1)
+                .replacementCql(-1)
                 .dcLocalReadRepairChance(0)
                 .gcGraceSeconds(0);
     }
@@ -506,6 +521,9 @@ public final class CFMetaData
         return new CFMetaData(parent.ksName, parent.indexColumnFamilyName(info), ColumnFamilyType.Standard, columnComparator, (AbstractType)null)
                              .keyValidator(info.getValidator())
                              .readRepairChance(0.0)
+                             .replacementOrdering(-1)
+                             .replacementPriority(-1)
+                             .replacementCql(-1)
                              .dcLocalReadRepairChance(0.0)
                              .gcGraceSeconds(0)
                              .caching(indexCaching)
@@ -548,6 +566,9 @@ public final class CFMetaData
 
         return newCFMD.comment(oldCFMD.comment)
                       .readRepairChance(oldCFMD.readRepairChance)
+                      .replacementOrdering(oldCFMD.replacement_ordering)
+                      .replacementPriority(oldCFMD.replacement_priority)
+                      .replacementCql(oldCFMD.replacement_cql)
                       .dcLocalReadRepairChance(oldCFMD.dcLocalReadRepairChance)
                       .replicateOnWrite(oldCFMD.replicateOnWrite)
                       .gcGraceSeconds(oldCFMD.gcGraceSeconds)
@@ -598,6 +619,21 @@ public final class CFMetaData
     public double getReadRepairChance()
     {
         return readRepairChance;
+    }
+
+    public int getReplacementOrdering()
+    {
+        return replacement_ordering;
+    }
+
+    public int getReplacementPriority()
+    {
+        return replacement_priority;
+    }
+
+    public int getReplacementCql()
+    {
+        return replacement_cql;
     }
 
     public double getDcLocalReadRepair()
@@ -757,6 +793,9 @@ public final class CFMetaData
             .append(comparator, rhs.comparator)
             .append(comment, rhs.comment)
             .append(readRepairChance, rhs.readRepairChance)
+            .append(replacement_ordering, rhs.replacement_ordering)
+            .append(replacement_priority, rhs.replacement_priority)
+            .append(replacement_cql, rhs.replacement_cql)
             .append(dcLocalReadRepairChance, rhs.dcLocalReadRepairChance)
             .append(replicateOnWrite, rhs.replicateOnWrite)
             .append(gcGraceSeconds, rhs.gcGraceSeconds)
@@ -790,6 +829,9 @@ public final class CFMetaData
             .append(comparator)
             .append(comment)
             .append(readRepairChance)
+            .append(replacement_ordering)
+            .append(replacement_priority)
+            .append(replacement_cql)
             .append(dcLocalReadRepairChance)
             .append(replicateOnWrite)
             .append(gcGraceSeconds)
@@ -888,6 +930,12 @@ public final class CFMetaData
                 newCFMD.caching(Caching.fromString(cf_def.caching));
             if (cf_def.isSetRead_repair_chance())
                 newCFMD.readRepairChance(cf_def.read_repair_chance);
+            if (cf_def.isSetReplacement_ordering())
+                newCFMD.replacementOrdering(cf_def.replacement_ordering);
+            if (cf_def.isSetReplacement_priority())
+                newCFMD.replacementPriority(cf_def.replacement_priority);
+            if (cf_def.isSetReplacement_cql())
+                newCFMD.replacementCql(cf_def.replacement_cql);
             if (cf_def.isSetDefault_time_to_live())
                 newCFMD.defaultTimeToLive(cf_def.default_time_to_live);
             if (cf_def.isSetDclocal_read_repair_chance())
@@ -981,6 +1029,9 @@ public final class CFMetaData
 
         comment = enforceCommentNotNull(cfm.comment);
         readRepairChance = cfm.readRepairChance;
+        replacement_ordering = cfm.replacement_ordering;
+        replacement_priority = cfm.replacement_priority;
+        replacement_cql = cfm.replacement_cql;
         dcLocalReadRepairChance = cfm.dcLocalReadRepairChance;
         replicateOnWrite = cfm.replicateOnWrite;
         gcGraceSeconds = cfm.gcGraceSeconds;
@@ -1122,6 +1173,9 @@ public final class CFMetaData
 
         def.setComment(enforceCommentNotNull(comment));
         def.setRead_repair_chance(readRepairChance);
+        def.setReplacement_ordering(replacement_ordering);
+        def.setReplacement_priority(replacement_priority);
+        def.setReplacement_cql(replacement_cql);
         def.setDclocal_read_repair_chance(dcLocalReadRepairChance);
         def.setReplicate_on_write(replicateOnWrite);
         def.setPopulate_io_cache_on_flush(populateIoCacheOnFlush);
@@ -1510,6 +1564,9 @@ public final class CFMetaData
         cf.addColumn(comment == null ? DeletedColumn.create(ldt, timestamp, cfName, "comment")
                                      : Column.create(comment, timestamp, cfName, "comment"));
         cf.addColumn(Column.create(readRepairChance, timestamp, cfName, "read_repair_chance"));
+        cf.addColumn(Column.create(replacement_ordering, timestamp, cfName, "replacement_ordering"));
+        cf.addColumn(Column.create(replacement_priority, timestamp, cfName, "replacement_priority"));
+        cf.addColumn(Column.create(replacement_cql, timestamp, cfName, "replacement_cql"));
         cf.addColumn(Column.create(dcLocalReadRepairChance, timestamp, cfName, "local_read_repair_chance"));
         cf.addColumn(Column.create(replicateOnWrite, timestamp, cfName, "replicate_on_write"));
         cf.addColumn(Column.create(populateIoCacheOnFlush, timestamp, cfName, "populate_io_cache_on_flush"));
@@ -1572,6 +1629,12 @@ public final class CFMetaData
             cfm.compactionStrategyClass(createCompactionStrategy(result.getString("compaction_strategy_class")));
             cfm.compressionParameters(CompressionParameters.create(fromJsonMap(result.getString("compression_parameters"))));
             cfm.compactionStrategyOptions(fromJsonMap(result.getString("compaction_strategy_options")));
+            if(result.has("replacement_ordering"))
+                cfm.replacementOrdering(result.getInt("replacement_ordering"));
+            if(result.has("replacement_priority"))
+                cfm.replacementPriority(result.getInt("replacement_priority"));
+            if(result.has("replacement_cql"))
+                cfm.replacementCql(result.getInt("replacement_cql"));
             if (result.has("index_interval"))
             {
                 cfm.indexInterval(result.getInt("index_interval"));
@@ -2048,6 +2111,9 @@ public final class CFMetaData
             .append("comparator", comparator)
             .append("comment", comment)
             .append("readRepairChance", readRepairChance)
+            .append("replacementOrdering", replacement_ordering)
+            .append("replacementPriority", replacement_priority)
+            .append("replacementCql", replacement_cql)
             .append("dclocalReadRepairChance", dcLocalReadRepairChance)
             .append("replicateOnWrite", replicateOnWrite)
             .append("gcGraceSeconds", gcGraceSeconds)
