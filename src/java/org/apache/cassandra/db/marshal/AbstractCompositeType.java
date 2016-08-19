@@ -26,6 +26,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.cassandra.db.marshal.CompositeType;
+import org.apache.cassandra.db.marshal.CompositeType.ReplacementComparator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A class avoiding class duplication between CompositeType and
  * DynamicCompositeType.
@@ -34,6 +39,11 @@ import java.util.List;
  */
 public abstract class AbstractCompositeType extends AbstractType<ByteBuffer>
 {
+    private static final Logger logger = LoggerFactory.getLogger(AbstractCompositeType.class);
+    public ByteBuffer replacementKey;
+    private int replacementOrdering = -1;
+    private int replacementPriority = -1;
+
     // changes bb position
     protected static int getShortLength(ByteBuffer bb)
     {
@@ -64,6 +74,7 @@ public abstract class AbstractCompositeType extends AbstractType<ByteBuffer>
         return getBytes(bb, length);
     }
 
+    @Override
     public int compare(ByteBuffer o1, ByteBuffer o2)
     {
         if (o1 == null)
@@ -166,6 +177,57 @@ public abstract class AbstractCompositeType extends AbstractType<ByteBuffer>
     }
 
     /*
+     * date: July 21, modified index position in 4 places (-1 to -2 & repOrd+repPri to repOrd+repPri-1)
+     */
+    public List<CompositeComponent> deconstructForReplacement( ByteBuffer bytes, int replacementOrdering, int replacementPriority, int replacementCql )
+    {
+
+        List<CompositeComponent> list = new ArrayList<CompositeComponent>();
+
+        ByteBuffer bb = bytes.duplicate();
+        this.replacementOrdering = replacementOrdering;
+        this.replacementPriority = replacementPriority;
+
+        replacementKey = ByteBuffer.allocate(bytes.limit());
+        ByteBuffer initialKey = bytes.duplicate();
+        byte b = -1;
+        int i = 0;
+
+        while (bb.remaining() > 0)
+        {
+
+            if(i >= replacementOrdering+replacementPriority-1)
+            {
+                //replacementKey.put(b); //Don't add b
+                replacementKey.put(getBytes(bb, bb.remaining()));
+                replacementKey.flip();
+                logger.info("last replacementKey : {}", replacementKey.hashCode());
+                return list;
+            }
+
+            AbstractType comparator = getComparator(i, bb);
+            ByteBuffer value = getWithShortLength(bb);
+            b = bb.get(); // Ignore; not relevant here //Keep it here, don't move it down..
+            // Sathiya: Remember in the cqlsh first column is RowKey which is not stored in Cassandra
+            if(i == replacementOrdering -2)
+            {
+                initialKey.limit(bb.position());
+                //replacementKey.put((byte) initialKey.hashCode());
+                replacementKey.put(getBytes(initialKey, initialKey.remaining()));
+
+            }
+            if(i > replacementOrdering-2 && i < replacementOrdering+replacementPriority-1)
+            {
+                list.add(new CompositeComponent(comparator,value));
+            }
+
+            ++i;
+        }
+        replacementKey.flip();
+        return list;
+    }
+
+    /*
      * Escapes all occurences of the ':' character from the input, replacing them by "\:".
      * Furthermore, if the last character is '\' or '!', a '!' is appended.
      */
@@ -225,6 +287,38 @@ public abstract class AbstractCompositeType extends AbstractType<ByteBuffer>
         {
             if (bb.remaining() != bytes.remaining())
                 sb.append(":");
+
+            AbstractType<?> comparator = getAndAppendComparator(i, bb, sb);
+            ByteBuffer value = getWithShortLength(bb);
+
+            sb.append(escape(comparator.getString(value)));
+
+            byte b = bb.get();
+            if (b != 0)
+            {
+                sb.append(":!");
+                break;
+            }
+            ++i;
+        }
+        return sb.toString();
+    }
+
+    public String getReplacementKeyString(ByteBuffer bytes, int replacementOrdering, int replacementPriority)
+    {
+        StringBuilder sb = new StringBuilder();
+        ByteBuffer bb = bytes.duplicate();
+        int i = 0;
+
+        while (bb.remaining() > 0)
+        {
+            if (bb.remaining() != bytes.remaining())
+                sb.append(":");
+
+            if(i==replacementOrdering-1)
+            {
+                i += replacementPriority;
+            }
 
             AbstractType<?> comparator = getAndAppendComparator(i, bb, sb);
             ByteBuffer value = getWithShortLength(bb);
@@ -359,5 +453,10 @@ public abstract class AbstractCompositeType extends AbstractType<ByteBuffer>
         String getRemainingPart();
         int getComparatorSerializedSize();
         void serializeComparator(ByteBuffer bb);
+    }
+
+    public ReplacementComparator getReplacementComparator(List<AbstractType<?>> types, int replacementOrdering, int replacementPriority)
+    {
+        return new ReplacementComparator(types, replacementOrdering, replacementPriority);
     }
 }
