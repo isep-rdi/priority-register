@@ -30,7 +30,6 @@ import org.apache.cassandra.utils.ByteBufferUtil;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
 
 /*
  * The encoding of a CompositeType column name should be:
@@ -530,5 +529,4 @@ public class CompositeType extends AbstractCompositeType
         }
 
     }
-}
 }
