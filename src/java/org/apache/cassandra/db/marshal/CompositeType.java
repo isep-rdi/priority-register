@@ -25,12 +25,15 @@ import org.apache.cassandra.db.filter.SliceQueryFilter;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.exceptions.SyntaxException;
 import org.apache.cassandra.io.util.DataOutputBuffer;
+import org.apache.cassandra.serializers.BytesSerializer;
 import org.apache.cassandra.serializers.MarshalException;
+import org.apache.cassandra.serializers.TypeSerializer;
 import org.apache.cassandra.utils.ByteBufferUtil;
+import org.apache.cassandra.utils.Hex;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
+import java.util.*;
 /*
  * The encoding of a CompositeType column name should be:
  *   <component><component><component> ...
@@ -390,7 +393,7 @@ public class CompositeType extends AbstractCompositeType
     {
         private int replacementOrdering = -1;
         private int replacementPriority = -1;
-        private static final Logger logger = LoggerFactory.getLogger(ReplacementComparator.class);
+//        private static final Logger logger = LoggerFactory.getLogger(ReplacementComparator.class);
 
         public ReplacementComparator(List<AbstractType<?>> types, int replacementOrdering, int replacementPriority) {
             super(ImmutableList.copyOf(types));
@@ -413,7 +416,7 @@ public class CompositeType extends AbstractCompositeType
             if(replacementOrdering > 0 && replacementPriority > 0)
             {
                 count++;
-                logger.info("ReplacementComparator was compared.. ");
+//                logger.info("ReplacementComparator was compared.. ");
                 while (bb1.remaining() > 0 && bb2.remaining() > 0)
                 {
                     // Sathiya: First column in cqlsh is RowKey and not stored in Cassandra
@@ -431,11 +434,11 @@ public class CompositeType extends AbstractCompositeType
 //                    continue;
                         i+=replacementPriority;
                     }
-                    logger.info("getComparator i value: {}",i);
+//                    logger.info("getComparator i value: {}",i);
                     //if(i <= replacementOrdering+replacementPriority)
                     AbstractType<?> comparator = getComparator(i, bb1, bb2);
 
-                    logger.info("Using Comparator.. {}", comparator.toString());
+//                    logger.info("Using Comparator.. {}", comparator.toString());
 
                     ByteBuffer value1 = getWithShortLength(bb1);
                     ByteBuffer value2 = getWithShortLength(bb2);

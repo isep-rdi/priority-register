@@ -324,7 +324,7 @@ public class AtomicSortedColumns extends ColumnFamily
             return new Holder(new SnapTreeMap<ByteBuffer, Column>(map.comparator()), LIVE);
         }
 
-        long addColumn(Column column, Allocator allocator, SecondaryIndexManager.Updater indexer)
+        long addColumn(ByteBuffer name, String CFName, Comparator comparator, int replacementOrdering, int replacementPriority, int replacementCql, Column column, Allocator allocator, SecondaryIndexManager.Updater indexer)
         {
 //            ByteBuffer name = column.name();
             if(replacementOrdering >= 0)
@@ -357,7 +357,7 @@ public class AtomicSortedColumns extends ColumnFamily
                         int priority = column.orderingPriority.get(i).comparator.compare(column.orderingPriority.get(i).value, existingColumn.orderingPriority.get(i).value);
                         if(priority < 0)
                         {
-                            logger.info("Dropping the current update");
+//                            logger.info("Dropping the current update");
                             indexer.insert(column);
                             return column.dataSize();
                         }

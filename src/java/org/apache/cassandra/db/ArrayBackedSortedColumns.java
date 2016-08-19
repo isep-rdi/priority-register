@@ -44,7 +44,6 @@ public class ArrayBackedSortedColumns extends AbstractThreadUnsafeSortedColumns
     private final boolean reversed;
     private final ArrayList<Column> columns;
 
-    private static final Logger logger = LoggerFactory.getLogger(ArrayBackedSortedColumns.class);
     private final ArrayList<ByteBuffer> colTracing;
 
     public static final ColumnFamily.Factory<ArrayBackedSortedColumns> factory = new Factory<ArrayBackedSortedColumns>()
