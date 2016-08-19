@@ -55,6 +55,8 @@ public class CFPropDefs {
     public static final String KW_POPULATE_IO_CACHE_ON_FLUSH = "populate_io_cache_on_flush";
     public static final String KW_BF_FP_CHANCE = "bloom_filter_fp_chance";
     public static final String KW_MEMTABLE_FLUSH_PERIOD = "memtable_flush_period_in_ms";
+    public static final String KW_REPLACEMENT_ORDERING = "replacement_ordering";
+    public static final String KW_REPLACEMENT_PRIORITY = "replacement_priority";
 
     // Maps CQL short names to the respective Cassandra comparator/validator class names
     public static final Map<String, String> comparators = new HashMap<String, String>();
@@ -98,6 +100,8 @@ public class CFPropDefs {
         keywords.add(KW_POPULATE_IO_CACHE_ON_FLUSH);
         keywords.add(KW_BF_FP_CHANCE);
         keywords.add(KW_MEMTABLE_FLUSH_PERIOD);
+        keywords.add(KW_REPLACEMENT_ORDERING);
+        keywords.add(KW_REPLACEMENT_PRIORITY);
 
         obsoleteKeywords.add("row_cache_size");
         obsoleteKeywords.add("key_cache_size");
