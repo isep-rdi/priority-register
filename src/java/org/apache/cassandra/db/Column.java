@@ -90,6 +90,10 @@ public class Column implements OnDiskAtom
     protected final ByteBuffer value;
     protected final long timestamp;
 
+    protected boolean partialOrdering;
+    protected List<AbstractCompositeType.CompositeComponent> orderingPriority = new ArrayList<AbstractCompositeType.CompositeComponent>();
+    protected ByteBuffer replacementKey;
+
     Column(ByteBuffer name)
     {
         this(name, ByteBufferUtil.EMPTY_BYTE_BUFFER);
@@ -108,6 +112,9 @@ public class Column implements OnDiskAtom
         this.name = name;
         this.value = value;
         this.timestamp = timestamp;
+
+        this.partialOrdering = false;
+        this.orderingPriority = null;
     }
 
     public Column withUpdatedName(ByteBuffer newName)
