@@ -391,4 +391,149 @@ public class CompositeType extends AbstractCompositeType
             return components.get(i);
         }
     }
+
+    public static class ReplacementComparator extends CompositeType //AbstractType<ByteBuffer> //implements Comparator<ByteBuffer>
+    {
+        private int replacementOrdering = -1;
+        private int replacementPriority = -1;
+        private static final Logger logger = LoggerFactory.getLogger(ReplacementComparator.class);
+
+        public ReplacementComparator(List<AbstractType<?>> types, int replacementOrdering, int replacementPriority) {
+            super(ImmutableList.copyOf(types));
+            this.replacementOrdering = replacementOrdering;
+            this.replacementPriority = replacementPriority;
+        }
+
+        int count=0;
+        public int compare(ByteBuffer o1, ByteBuffer o2)
+        {
+            if (o1 == null)
+                return o2 == null ? 0 : -1;
+
+            ByteBuffer bb1 = o1.duplicate();
+            ByteBuffer bb2 = o2.duplicate();
+            int i = 0;
+
+            ByteBuffer previous = null;
+
+            if(replacementOrdering > 0 && replacementPriority > 0)
+            {
+                count++;
+                logger.info("ReplacementComparator was compared.. ");
+                while (bb1.remaining() > 0 && bb2.remaining() > 0)
+                {
+                    // Sathiya: First column in cqlsh is RowKey and not stored in Cassandra
+                    if(i == replacementOrdering)
+                    {
+//                    int j = 0;
+//                    while(j < replacementPriority)
+//                    {
+//                        AbstractType<?> comparator = getComparator(i, bb1, bb2);
+//                        ByteBuffer dropValue1 = getWithShortLength(bb1);
+//                        ByteBuffer dropValue2 = getWithShortLength(bb2);
+//                        ++j;
+//                        ++i;
+//                    }
+//                    continue;
+                        i+=replacementPriority;
+                    }
+                    logger.info("getComparator i value: {}",i);
+                    //if(i <= replacementOrdering+replacementPriority)
+                    AbstractType<?> comparator = getComparator(i, bb1, bb2);
+
+                    logger.info("Using Comparator.. {}", comparator.toString());
+
+                    ByteBuffer value1 = getWithShortLength(bb1);
+                    ByteBuffer value2 = getWithShortLength(bb2);
+
+                    int cmp = comparator.compareCollectionMembers(value1, value2, previous);
+                    if (cmp != 0)
+                        return cmp;
+
+                    previous = value1;
+
+                    byte b1 = bb1.get();
+                    byte b2 = bb2.get();
+                    if (b1 < 0)
+                    {
+                        if (b2 >= 0)
+                            return -1;
+                    }
+                    else if (b1 > 0)
+                    {
+                        if (b2 <= 0)
+                            return 1;
+                    }
+                    else
+                    {
+                        // b1 == 0
+                        if (b2 != 0)
+                            return -b2;
+                    }
+                    ++i;
+                }
+            }
+
+            else
+            {
+                while (bb1.remaining() > 0 && bb2.remaining() > 0)
+                {
+                    AbstractType<?> comparator = getComparator(i, bb1, bb2);
+
+                    ByteBuffer value1 = getWithShortLength(bb1);
+                    ByteBuffer value2 = getWithShortLength(bb2);
+
+                    int cmp = comparator.compareCollectionMembers(value1, value2, previous);
+                    if (cmp != 0)
+                        return cmp;
+
+                    previous = value1;
+
+                    byte b1 = bb1.get();
+                    byte b2 = bb2.get();
+                    if (b1 < 0)
+                    {
+                        if (b2 >= 0)
+                            return -1;
+                    }
+                    else if (b1 > 0)
+                    {
+                        if (b2 <= 0)
+                            return 1;
+                    }
+                    else
+                    {
+                        // b1 == 0
+                        if (b2 != 0)
+                            return -b2;
+                    }
+                    ++i;
+                }
+            }
+
+            if (bb1.remaining() == 0)
+                return bb2.remaining() == 0 ? 0 : -1;
+
+            // bb1.remaining() > 0 && bb2.remaining() == 0
+            return 1;
+        }
+
+        public TypeSerializer<ByteBuffer> getSerializer()
+        {
+            return BytesSerializer.instance;
+        }
+        public ByteBuffer fromString(String source)
+        {
+            try
+            {
+                return ByteBuffer.wrap(Hex.hexToBytes(source));
+            }
+            catch (NumberFormatException e)
+            {
+                throw new MarshalException(String.format("cannot parse '%s' as hex bytes", source), e);
+            }
+        }
+
+    }
+}
 }
