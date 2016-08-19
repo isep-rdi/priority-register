@@ -68,6 +68,15 @@ public class EmptyColumns extends AbstractThreadUnsafeSortedColumns
         throw new UnsupportedOperationException();
     }
 
+    /**
+     * Add Tombstone for the given column. Used to while replacing the column with lower priority
+     * @param column the lower priority Column for which the tombstone has to be added
+     */
+    public void addTombstoneForReplacement(Column column)
+    {
+        throw new UnsupportedOperationException();
+    }
+
     public void addAll(ColumnFamily cm, Allocator allocator, Function<Column, Column> transformation)
     {
         throw new UnsupportedOperationException();
