@@ -17,25 +17,20 @@
  */
 package org.apache.cassandra.db.marshal;
 
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.google.common.collect.ImmutableList;
-
+import org.apache.cassandra.cql3.ColumnNameBuilder;
+import org.apache.cassandra.cql3.Relation;
 import org.apache.cassandra.db.filter.ColumnSlice;
 import org.apache.cassandra.db.filter.SliceQueryFilter;
 import org.apache.cassandra.exceptions.ConfigurationException;
 import org.apache.cassandra.exceptions.SyntaxException;
-import org.apache.cassandra.cql3.ColumnNameBuilder;
-import org.apache.cassandra.cql3.Relation;
 import org.apache.cassandra.io.util.DataOutputBuffer;
 import org.apache.cassandra.serializers.MarshalException;
 import org.apache.cassandra.utils.ByteBufferUtil;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /*
  * The encoding of a CompositeType column name should be:
