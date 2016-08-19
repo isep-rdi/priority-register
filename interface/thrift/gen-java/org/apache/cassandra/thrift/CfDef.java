@@ -94,6 +94,10 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
   private static final org.apache.thrift.protocol.TField ROW_CACHE_PROVIDER_FIELD_DESC = new org.apache.thrift.protocol.TField("row_cache_provider", org.apache.thrift.protocol.TType.STRING, (short)27);
   private static final org.apache.thrift.protocol.TField ROW_CACHE_KEYS_TO_SAVE_FIELD_DESC = new org.apache.thrift.protocol.TField("row_cache_keys_to_save", org.apache.thrift.protocol.TType.I32, (short)31);
 
+  private static final org.apache.thrift.protocol.TField REPLACEMENT_ORDERING_FIELD_DESC = new org.apache.thrift.protocol.TField("replacement_ordering", org.apache.thrift.protocol.TType.I32, (short)44);
+  private static final org.apache.thrift.protocol.TField REPLACEMENT_PRIORITY_FIELD_DESC = new org.apache.thrift.protocol.TField("replacement_priority", org.apache.thrift.protocol.TType.I32, (short)45);
+  private static final org.apache.thrift.protocol.TField REPLACEMENT_CQL_FIELD_DESC = new org.apache.thrift.protocol.TField("replacement_cql", org.apache.thrift.protocol.TType.I32, (short)46);
+
   private static final Map<Class<? extends IScheme>, SchemeFactory> schemes = new HashMap<Class<? extends IScheme>, SchemeFactory>();
   static {
     schemes.put(StandardScheme.class, new CfDefStandardSchemeFactory());
@@ -128,6 +132,9 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
   public int index_interval; // optional
   public String speculative_retry; // optional
   public List<TriggerDef> triggers; // optional
+  public int replacement_ordering = -1; // optional **Sathiya**
+  public int replacement_priority = -1; // optional **Sathiya**
+  public int replacement_cql = -1; // optional **Sathiya**
   /**
    * @deprecated
    */
@@ -199,6 +206,9 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     INDEX_INTERVAL((short)41, "index_interval"),
     SPECULATIVE_RETRY((short)42, "speculative_retry"),
     TRIGGERS((short)43, "triggers"),
+    REPLACEMENT_ORDERING((short)44, "replacement_ordering"),
+    REPLACEMENT_PRIORITY((short)45, "replacement_priority"),
+    REPLACEMENT_CQL((short)46, "replacement_cql"),
     /**
      * @deprecated
      */
@@ -329,6 +339,12 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
           return ROW_CACHE_PROVIDER;
         case 31: // ROW_CACHE_KEYS_TO_SAVE
           return ROW_CACHE_KEYS_TO_SAVE;
+        case 44:
+          return REPLACEMENT_ORDERING;
+        case 45:
+          return REPLACEMENT_PRIORITY;
+        case 46:
+          return REPLACEMENT_CQL;
         default:
           return null;
       }
@@ -370,6 +386,9 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
 
   // isset id assignments
   private static final int __READ_REPAIR_CHANCE_ISSET_ID = 0;
+  private static final int __REPLACEMENT_ORDERING_ISSET_ID = 0;
+  private static final int __REPLACEMENT_PRIORITY_ISSET_ID = 0;
+  private static final int __REPLACEMENT_CQL_ISSET_ID = 0;
   private static final int __GC_GRACE_SECONDS_ISSET_ID = 1;
   private static final int __ID_ISSET_ID = 2;
   private static final int __MIN_COMPACTION_THRESHOLD_ISSET_ID = 3;
@@ -391,7 +410,12 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
   private static final int __MERGE_SHARDS_CHANCE_ISSET_ID = 19;
   private static final int __ROW_CACHE_KEYS_TO_SAVE_ISSET_ID = 20;
   private int __isset_bitfield = 0;
-  private _Fields optionals[] = {_Fields.COLUMN_TYPE,_Fields.COMPARATOR_TYPE,_Fields.SUBCOMPARATOR_TYPE,_Fields.COMMENT,_Fields.READ_REPAIR_CHANCE,_Fields.COLUMN_METADATA,_Fields.GC_GRACE_SECONDS,_Fields.DEFAULT_VALIDATION_CLASS,_Fields.ID,_Fields.MIN_COMPACTION_THRESHOLD,_Fields.MAX_COMPACTION_THRESHOLD,_Fields.REPLICATE_ON_WRITE,_Fields.KEY_VALIDATION_CLASS,_Fields.KEY_ALIAS,_Fields.COMPACTION_STRATEGY,_Fields.COMPACTION_STRATEGY_OPTIONS,_Fields.COMPRESSION_OPTIONS,_Fields.BLOOM_FILTER_FP_CHANCE,_Fields.CACHING,_Fields.DCLOCAL_READ_REPAIR_CHANCE,_Fields.POPULATE_IO_CACHE_ON_FLUSH,_Fields.MEMTABLE_FLUSH_PERIOD_IN_MS,_Fields.DEFAULT_TIME_TO_LIVE,_Fields.INDEX_INTERVAL,_Fields.SPECULATIVE_RETRY,_Fields.TRIGGERS,_Fields.ROW_CACHE_SIZE,_Fields.KEY_CACHE_SIZE,_Fields.ROW_CACHE_SAVE_PERIOD_IN_SECONDS,_Fields.KEY_CACHE_SAVE_PERIOD_IN_SECONDS,_Fields.MEMTABLE_FLUSH_AFTER_MINS,_Fields.MEMTABLE_THROUGHPUT_IN_MB,_Fields.MEMTABLE_OPERATIONS_IN_MILLIONS,_Fields.MERGE_SHARDS_CHANCE,_Fields.ROW_CACHE_PROVIDER,_Fields.ROW_CACHE_KEYS_TO_SAVE};
+  private boolean __isset_replacement_ordering = false;
+  private boolean __isset_replacement_priority = false;
+  private boolean __isset_replacement_cql = false;
+
+  private _Fields optionals[] = {_Fields.COLUMN_TYPE,_Fields.COMPARATOR_TYPE,_Fields.SUBCOMPARATOR_TYPE,_Fields.COMMENT,_Fields.READ_REPAIR_CHANCE,_Fields.COLUMN_METADATA,_Fields.GC_GRACE_SECONDS,_Fields.DEFAULT_VALIDATION_CLASS,_Fields.ID,_Fields.MIN_COMPACTION_THRESHOLD,_Fields.MAX_COMPACTION_THRESHOLD,_Fields.REPLICATE_ON_WRITE,_Fields.KEY_VALIDATION_CLASS,_Fields.KEY_ALIAS,_Fields.COMPACTION_STRATEGY,_Fields.COMPACTION_STRATEGY_OPTIONS,_Fields.COMPRESSION_OPTIONS,_Fields.BLOOM_FILTER_FP_CHANCE,_Fields.CACHING,_Fields.DCLOCAL_READ_REPAIR_CHANCE,_Fields.POPULATE_IO_CACHE_ON_FLUSH,_Fields.MEMTABLE_FLUSH_PERIOD_IN_MS,_Fields.DEFAULT_TIME_TO_LIVE,_Fields.INDEX_INTERVAL,_Fields.SPECULATIVE_RETRY,_Fields.TRIGGERS,_Fields.ROW_CACHE_SIZE,_Fields.KEY_CACHE_SIZE,_Fields.ROW_CACHE_SAVE_PERIOD_IN_SECONDS,_Fields.KEY_CACHE_SAVE_PERIOD_IN_SECONDS,_Fields.MEMTABLE_FLUSH_AFTER_MINS,_Fields.MEMTABLE_THROUGHPUT_IN_MB,_Fields.MEMTABLE_OPERATIONS_IN_MILLIONS,_Fields.MERGE_SHARDS_CHANCE,_Fields.ROW_CACHE_PROVIDER,_Fields.ROW_CACHE_KEYS_TO_SAVE, _Fields.REPLACEMENT_ORDERING, _Fields.REPLACEMENT_PRIORITY, _Fields.REPLACEMENT_CQL};
+
   public static final Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> metaDataMap;
   static {
     Map<_Fields, org.apache.thrift.meta_data.FieldMetaData> tmpMap = new EnumMap<_Fields, org.apache.thrift.meta_data.FieldMetaData>(_Fields.class);
@@ -479,6 +503,14 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
         new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
     metaDataMap = Collections.unmodifiableMap(tmpMap);
     org.apache.thrift.meta_data.FieldMetaData.addStructMetaDataMap(CfDef.class, metaDataMap);
+
+    tmpMap.put(_Fields.REPLACEMENT_ORDERING, new org.apache.thrift.meta_data.FieldMetaData("replacement_ordering", org.apache.thrift.TFieldRequirementType.OPTIONAL,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+    tmpMap.put(_Fields.REPLACEMENT_PRIORITY, new org.apache.thrift.meta_data.FieldMetaData("replacement_priority", org.apache.thrift.TFieldRequirementType.OPTIONAL,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+    tmpMap.put(_Fields.REPLACEMENT_CQL, new org.apache.thrift.meta_data.FieldMetaData("replacement_cql", org.apache.thrift.TFieldRequirementType.OPTIONAL,
+            new org.apache.thrift.meta_data.FieldValueMetaData(org.apache.thrift.protocol.TType.I32)));
+
   }
 
   public CfDef() {
@@ -613,6 +645,10 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       this.row_cache_provider = other.row_cache_provider;
     }
     this.row_cache_keys_to_save = other.row_cache_keys_to_save;
+
+    this.replacement_ordering = other.replacement_ordering;
+    this.replacement_priority = other.replacement_priority;
+    this.replacement_cql = other.replacement_cql;
   }
 
   public CfDef deepCopy() {
@@ -684,6 +720,10 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     this.row_cache_provider = null;
     setRow_cache_keys_to_saveIsSet(false);
     this.row_cache_keys_to_save = 0;
+
+    this.replacement_ordering = -1;
+    this.replacement_priority = -1;
+    this.replacement_cql = -1;
   }
 
   public String getKeyspace() {
@@ -834,9 +874,39 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     return this.read_repair_chance;
   }
 
+  public int getReplacement_ordering() {
+    return this.replacement_ordering;
+  }
+
+  public int getReplacement_priority() {
+    return this.replacement_priority;
+  }
+
+  public int getReplacement_cql() {
+    return this.replacement_cql;
+  }
+
   public CfDef setRead_repair_chance(double read_repair_chance) {
     this.read_repair_chance = read_repair_chance;
     setRead_repair_chanceIsSet(true);
+    return this;
+  }
+
+  public CfDef setReplacement_ordering(int replacement_ordering){
+    this.replacement_ordering = replacement_ordering;
+    setReplacement_orderingIsSet(true);
+    return this;
+  }
+
+  public CfDef setReplacement_priority(int replacement_priority){
+    this.replacement_priority = replacement_priority;
+    setReplacement_priorityIsSet(true);
+    return this;
+  }
+
+  public CfDef setReplacement_cql(int replacement_cql){
+    this.replacement_cql = replacement_cql;
+    setReplacement_cqlIsSet(true);
     return this;
   }
 
@@ -844,13 +914,58 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __READ_REPAIR_CHANCE_ISSET_ID);
   }
 
+  public void unsetReplacement_ordering() {
+//    __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __REPLACEMENT_ORDERING_ISSET_ID);
+    this.__isset_replacement_ordering = false;
+  }
+
+  public void unsetReplacement_priority() {
+//    __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __REPLACEMENT_ORDERING_ISSET_ID);
+    this.__isset_replacement_priority = false;
+  }
+
+  public void unsetReplacement_cql() {
+//    __isset_bitfield = EncodingUtils.clearBit(__isset_bitfield, __REPLACEMENT_ORDERING_ISSET_ID);
+    this.__isset_replacement_cql = false;
+  }
+
   /** Returns true if field read_repair_chance is set (has been assigned a value) and false otherwise */
   public boolean isSetRead_repair_chance() {
     return EncodingUtils.testBit(__isset_bitfield, __READ_REPAIR_CHANCE_ISSET_ID);
   }
 
+  public boolean isSetReplacement_ordering() {
+//    return EncodingUtils.testBit(__isset_bitfield, __REPLACEMENT_ORDERING_ISSET_ID);
+    return this.__isset_replacement_ordering;
+  }
+
+  public boolean isSetReplacement_priority() {
+//    return EncodingUtils.testBit(__isset_bitfield, __REPLACEMENT_ORDERING_ISSET_ID);
+    return this.__isset_replacement_priority;
+  }
+
+  public boolean isSetReplacement_cql() {
+//    return EncodingUtils.testBit(__isset_bitfield, __REPLACEMENT_ORDERING_ISSET_ID);
+    return this.__isset_replacement_cql;
+  }
+
   public void setRead_repair_chanceIsSet(boolean value) {
     __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __READ_REPAIR_CHANCE_ISSET_ID, value);
+  }
+
+  public void setReplacement_orderingIsSet(boolean value) {
+//    __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __REPLACEMENT_ORDERING_ISSET_ID, value);
+    this.__isset_replacement_ordering = value;
+  }
+
+  public void setReplacement_priorityIsSet(boolean value) {
+//    __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __REPLACEMENT_ORDERING_ISSET_ID, value);
+    this.__isset_replacement_priority = value;
+  }
+
+  public void setReplacement_cqlIsSet(boolean value) {
+//    __isset_bitfield = EncodingUtils.setBit(__isset_bitfield, __REPLACEMENT_ORDERING_ISSET_ID, value);
+    this.__isset_replacement_cql = value;
   }
 
   public int getColumn_metadataSize() {
@@ -2005,6 +2120,29 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       }
       break;
 
+    case REPLACEMENT_ORDERING:
+      if (value == null) {
+        unsetReplacement_ordering();
+      } else {
+        setReplacement_ordering((int)value);
+      }
+      break;
+
+    case REPLACEMENT_PRIORITY:
+      if (value == null) {
+        unsetReplacement_priority();
+      } else {
+        setReplacement_priority((int)value);
+      }
+      break;
+
+    case REPLACEMENT_CQL:
+      if (value == null) {
+        unsetReplacement_cql();
+      } else {
+        setReplacement_cql((int)value);
+      }
+      break;
     }
   }
 
@@ -2124,6 +2262,14 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     case ROW_CACHE_KEYS_TO_SAVE:
       return Integer.valueOf(getRow_cache_keys_to_save());
 
+    case REPLACEMENT_ORDERING:
+      return Integer.valueOf(getReplacement_ordering());
+
+    case REPLACEMENT_PRIORITY:
+      return Integer.valueOf(getReplacement_priority());
+
+    case REPLACEMENT_CQL:
+      return Integer.valueOf(getReplacement_cql());
     }
     throw new IllegalStateException();
   }
@@ -2211,6 +2357,12 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       return isSetRow_cache_provider();
     case ROW_CACHE_KEYS_TO_SAVE:
       return isSetRow_cache_keys_to_save();
+    case REPLACEMENT_ORDERING:
+      return isSetReplacement_ordering();
+    case REPLACEMENT_PRIORITY:
+      return isSetReplacement_priority();
+    case REPLACEMENT_CQL:
+      return isSetReplacement_cql();
     }
     throw new IllegalStateException();
   }
@@ -2570,6 +2722,33 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
         return false;
     }
 
+    boolean this_present_replacement_ordering = true && this.isSetReplacement_ordering();
+    boolean that_present_replacement_ordering = true && that.isSetReplacement_ordering();
+    if (this_present_replacement_ordering || that_present_replacement_ordering) {
+      if (!(this_present_replacement_ordering && that_present_replacement_ordering))
+        return false;
+      if (this.replacement_ordering != that.replacement_ordering)
+        return false;
+    }
+
+    boolean this_present_replacement_priority = true && this.isSetReplacement_priority();
+    boolean that_present_replacement_priority = true && that.isSetReplacement_priority();
+    if (this_present_replacement_priority || that_present_replacement_priority) {
+      if (!(this_present_replacement_priority && that_present_replacement_priority))
+        return false;
+      if (this.replacement_priority != that.replacement_priority)
+        return false;
+    }
+
+    boolean this_present_replacement_cql = true && this.isSetReplacement_cql();
+    boolean that_present_replacement_cql = true && that.isSetReplacement_cql();
+    if (this_present_replacement_cql || that_present_replacement_cql) {
+      if (!(this_present_replacement_cql && that_present_replacement_cql))
+        return false;
+      if (this.replacement_cql != that.replacement_cql)
+        return false;
+    }
+
     return true;
   }
 
@@ -2766,6 +2945,21 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
     builder.append(present_row_cache_keys_to_save);
     if (present_row_cache_keys_to_save)
       builder.append(row_cache_keys_to_save);
+
+    boolean present_replacement_ordering = true && (isSetReplacement_ordering());
+    builder.append(present_replacement_ordering);
+    if (present_replacement_ordering)
+      builder.append(replacement_ordering);
+
+    boolean present_replacement_priority = true && (isSetReplacement_priority());
+    builder.append(present_replacement_priority);
+    if (present_replacement_priority)
+      builder.append(replacement_priority);
+
+    boolean present_replacement_cql = true && (isSetReplacement_cql());
+    builder.append(present_replacement_cql);
+    if (present_replacement_cql)
+      builder.append(replacement_cql);
 
     return builder.toHashCode();
   }
@@ -3158,6 +3352,24 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
         return lastComparison;
       }
     }
+    if (isSetReplacement_ordering()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.replacement_ordering, typedOther.replacement_ordering);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    if (isSetReplacement_priority()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.replacement_priority, typedOther.replacement_priority);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
+    if (isSetReplacement_cql()) {
+      lastComparison = org.apache.thrift.TBaseHelper.compareTo(this.replacement_cql, typedOther.replacement_cql);
+      if (lastComparison != 0) {
+        return lastComparison;
+      }
+    }
     return 0;
   }
 
@@ -3467,6 +3679,24 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       if (!first) sb.append(", ");
       sb.append("row_cache_keys_to_save:");
       sb.append(this.row_cache_keys_to_save);
+      first = false;
+    }
+    if (isSetReplacement_ordering()) {
+      if (!first) sb.append(", ");
+      sb.append("replacement_ordering:");
+      sb.append(this.replacement_ordering);
+      first = false;
+    }
+    if (isSetReplacement_priority()) {
+      if (!first) sb.append(", ");
+      sb.append("replacement_priority:");
+      sb.append(this.replacement_priority);
+      first = false;
+    }
+    if (isSetReplacement_cql()) {
+      if (!first) sb.append(", ");
+      sb.append("replacement_cql:");
+      sb.append(this.replacement_cql);
       first = false;
     }
     sb.append(")");
@@ -3870,6 +4100,30 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
               org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
             }
             break;
+          case 44: // REPLACEMENT_ORDERING
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.replacement_ordering = iprot.readI32();
+              struct.setReplacement_orderingIsSet(true);
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 45: // REPLACEMENT_PRIORITY
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.replacement_priority = iprot.readI32();
+              struct.setReplacement_priorityIsSet(true);
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
+          case 46: // REPLACEMENT_CQL
+            if (schemeField.type == org.apache.thrift.protocol.TType.I32) {
+              struct.replacement_cql = iprot.readI32();
+              struct.setReplacement_cqlIsSet(true);
+            } else {
+              org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
+            }
+            break;
           default:
             org.apache.thrift.protocol.TProtocolUtil.skip(iprot, schemeField.type);
         }
@@ -3936,6 +4190,21 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       if (struct.isSetRead_repair_chance()) {
         oprot.writeFieldBegin(READ_REPAIR_CHANCE_FIELD_DESC);
         oprot.writeDouble(struct.read_repair_chance);
+        oprot.writeFieldEnd();
+      }
+      if (struct.isSetReplacement_ordering()) {
+        oprot.writeFieldBegin(REPLACEMENT_ORDERING_FIELD_DESC);
+        oprot.writeI32(struct.replacement_ordering);
+        oprot.writeFieldEnd();
+      }
+      if (struct.isSetReplacement_priority()) {
+        oprot.writeFieldBegin(REPLACEMENT_PRIORITY_FIELD_DESC);
+        oprot.writeI32(struct.replacement_priority);
+        oprot.writeFieldEnd();
+      }
+      if (struct.isSetReplacement_cql()) {
+        oprot.writeFieldBegin(REPLACEMENT_CQL_FIELD_DESC);
+        oprot.writeI32(struct.replacement_cql);
         oprot.writeFieldEnd();
       }
       if (struct.column_metadata != null) {
@@ -4263,7 +4532,16 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       if (struct.isSetRow_cache_keys_to_save()) {
         optionals.set(35);
       }
-      oprot.writeBitSet(optionals, 36);
+      if (struct.isSetReplacement_ordering()) {
+        optionals.set(36);
+      }
+      if (struct.isSetReplacement_priority()) {
+        optionals.set(37);
+      }
+      if (struct.isSetReplacement_cql()) {
+        optionals.set(38);
+      }
+      oprot.writeBitSet(optionals, 39);
       if (struct.isSetColumn_type()) {
         oprot.writeString(struct.column_type);
       }
@@ -4397,6 +4675,15 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       }
       if (struct.isSetRow_cache_keys_to_save()) {
         oprot.writeI32(struct.row_cache_keys_to_save);
+      }
+      if (struct.isSetReplacement_ordering()) {
+        oprot.writeI32(struct.replacement_ordering);
+      }
+      if (struct.isSetReplacement_priority()) {
+        oprot.writeI32(struct.replacement_priority);
+      }
+      if (struct.isSetReplacement_cql()) {
+        oprot.writeI32(struct.replacement_cql);
       }
     }
 
@@ -4593,6 +4880,18 @@ public class CfDef implements org.apache.thrift.TBase<CfDef, CfDef._Fields>, jav
       if (incoming.get(35)) {
         struct.row_cache_keys_to_save = iprot.readI32();
         struct.setRow_cache_keys_to_saveIsSet(true);
+      }
+      if (incoming.get(36)) {
+        struct.replacement_ordering = iprot.readI32();
+        struct.setReplacement_orderingIsSet(true);
+      }
+      if (incoming.get(37)) {
+        struct.replacement_priority = iprot.readI32();
+        struct.setReplacement_priorityIsSet(true);
+      }
+      if (incoming.get(38)) {
+        struct.replacement_cql = iprot.readI32();
+        struct.setReplacement_cqlIsSet(true);
       }
     }
   }
