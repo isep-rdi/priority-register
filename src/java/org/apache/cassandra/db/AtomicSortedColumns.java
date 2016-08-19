@@ -27,8 +27,12 @@ import edu.stanford.ppl.concurrent.SnapTreeMap;
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.db.filter.ColumnSlice;
 import org.apache.cassandra.db.index.SecondaryIndexManager;
+import org.apache.cassandra.db.marshal.AbstractCompositeType;
 import org.apache.cassandra.db.marshal.AbstractType;
+import org.apache.cassandra.db.marshal.CompositeType;
+import org.apache.cassandra.db.marshal.CompositeType.ReplacementComparator;
 import org.apache.cassandra.utils.Allocator;
+import org.apache.cassandra.utils.HeapAllocator;
 
 /**
  * A thread-safe and atomic ISortedColumns implementation.
@@ -59,7 +63,7 @@ public class AtomicSortedColumns extends ColumnFamily
 
     private AtomicSortedColumns(CFMetaData metadata)
     {
-        this(metadata, new Holder(metadata.comparator));
+        this(metadata, new Holder(metadata.comparator, metadata.getReplacementOrdering(), metadata.getReplacementPriority()));
     }
 
     private AtomicSortedColumns(CFMetaData metadata, Holder holder)
@@ -140,7 +144,7 @@ public class AtomicSortedColumns extends ColumnFamily
         {
             current = ref.get();
             modified = current.cloneMe();
-            modified.addColumn(column, allocator, SecondaryIndexManager.nullUpdater);
+            modified.addColumn(column.name, metadata.cfName, (CompositeType)metadata.comparator, metadata.getReplacementOrdering(), metadata.getReplacementPriority(), metadata.getReplacementCql(), column, allocator, SecondaryIndexManager.nullUpdater);
         }
         while (!ref.compareAndSet(current, modified));
     }
@@ -181,7 +185,7 @@ public class AtomicSortedColumns extends ColumnFamily
 
             for (Column column : cm)
             {
-                sizeDelta += modified.addColumn(transformation.apply(column), allocator, indexer);
+                sizeDelta += modified.addColumn(column.name, metadata.cfName, metadata.comparator, metadata.getReplacementOrdering(), metadata.getReplacementPriority(), metadata.getReplacementCql(), transformation.apply(column), allocator, indexer);
                 // bail early if we know we've been beaten
                 if (ref.get() != current)
                     continue main_loop;
@@ -271,9 +275,25 @@ public class AtomicSortedColumns extends ColumnFamily
         final SnapTreeMap<ByteBuffer, Column> map;
         final DeletionInfo deletionInfo;
 
-        Holder(AbstractType<?> comparator)
+        private static final HashMap<String, ByteBuffer> replacementMap = new HashMap<String, ByteBuffer>();
+        boolean replacement = false;
+        java.util.Date date= new java.util.Date();
+        private ReplacementComparator replacementComparator = null;
+
+        Holder(AbstractType<?> comparator, int replacementOrdering, int replacementPriority)
         {
-            this(new SnapTreeMap<ByteBuffer, Column>(comparator), LIVE);
+            if(replacementOrdering > 0)
+            {
+                CompositeType composite = (CompositeType)comparator;
+                this.replacementComparator = composite.getReplacementComparator(composite.types, replacementOrdering, replacementPriority);
+                this.deletionInfo = LIVE;
+                this.map = new SnapTreeMap<ByteBuffer, Column>(replacementComparator);
+            }
+            else
+            {
+                this.deletionInfo = LIVE;
+                this.map = new SnapTreeMap<ByteBuffer, Column>(comparator);
+            }
         }
 
         Holder(SnapTreeMap<ByteBuffer, Column> map, DeletionInfo deletionInfo)
@@ -306,7 +326,47 @@ public class AtomicSortedColumns extends ColumnFamily
 
         long addColumn(Column column, Allocator allocator, SecondaryIndexManager.Updater indexer)
         {
-            ByteBuffer name = column.name();
+//            ByteBuffer name = column.name();
+            if(replacementOrdering >= 0)
+            {
+                ByteBuffer replacementKey = ByteBuffer.allocate(name.capacity());
+
+                List<AbstractCompositeType.CompositeComponent> columnList = new ArrayList<AbstractCompositeType.CompositeComponent>();
+
+                column.partialOrdering = true;
+//                logger.info("Comparator Name : {}", new String(comparator.toString().trim()));
+                CompositeType composite = (CompositeType)comparator;
+//                logger.info("composite.getString(name) : {}", new String(composite.getString(name)));
+
+                columnList = composite.deconstructForReplacement(name, replacementOrdering, replacementPriority, replacementCql);
+//                logger.info("Components Size : {}", columnList.size());
+
+                replacementKey = composite.replacementKey;
+                name = replacementKey;
+//                logger.info("name = mapKey hashcode: {}", replacementKey.hashCode());
+//                logger.info("name = mapKey String: {}", new String(composite.getReplacementKeyString(replacementKey, replacementOrdering, replacementPriority)));
+
+                column.orderingPriority = columnList;
+//                logger.info("Component 0 : {}", columnList.get(0).comparator.compose(columnList.get(0).value));
+
+                Column existingColumn = map.get(name);
+                if(existingColumn != null)
+                {
+                    for(int i=0; i < column.orderingPriority.size(); i++)
+                    {
+                        int priority = column.orderingPriority.get(i).comparator.compare(column.orderingPriority.get(i).value, existingColumn.orderingPriority.get(i).value);
+                        if(priority < 0)
+                        {
+                            logger.info("Dropping the current update");
+                            indexer.insert(column);
+                            return column.dataSize();
+                        }
+                        else if (priority >0)
+                            break;
+                    }
+                }
+            }
+
             while (true)
             {
                 Column oldColumn = map.putIfAbsent(name, column);
@@ -316,7 +376,7 @@ public class AtomicSortedColumns extends ColumnFamily
                     return column.dataSize();
                 }
 
-                Column reconciledColumn = column.reconcile(oldColumn, allocator);
+                Column reconciledColumn = column.reconcile(oldColumn, HeapAllocator.instance);
                 if (map.replace(name, oldColumn, reconciledColumn))
                 {
                     // for memtable updates we only care about oldcolumn, reconciledcolumn, but when compacting
