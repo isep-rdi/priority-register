@@ -25,16 +25,21 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 
 import com.google.common.base.Function;
+import java.util.List;
 
 import org.apache.cassandra.config.CFMetaData;
 import org.apache.cassandra.db.filter.ColumnSlice;
+import org.apache.cassandra.db.marshal.AbstractCompositeType;
 import org.apache.cassandra.db.marshal.AbstractType;
+import org.apache.cassandra.db.marshal.CompositeType;
+import org.apache.cassandra.db.marshal.CompositeType.ReplacementComparator;
 import org.apache.cassandra.utils.Allocator;
 
 public class TreeMapBackedSortedColumns extends AbstractThreadUnsafeSortedColumns
 {
     private final TreeMap<ByteBuffer, Column> map;
 
+    private ReplacementComparator replacementComparator = null;
     public static final ColumnFamily.Factory<TreeMapBackedSortedColumns> factory = new Factory<TreeMapBackedSortedColumns>()
     {
         public TreeMapBackedSortedColumns create(CFMetaData metadata, boolean insertReversed)
@@ -52,7 +57,17 @@ public class TreeMapBackedSortedColumns extends AbstractThreadUnsafeSortedColumn
     private TreeMapBackedSortedColumns(CFMetaData metadata)
     {
         super(metadata);
-        this.map = new TreeMap<ByteBuffer, Column>(metadata.comparator);
+        if(metadata.getReplacementOrdering() > 0 && !(metadata.comparator instanceof ReplacementComparator))
+        {
+            CompositeType composite = (CompositeType)metadata.comparator;
+            this.replacementComparator = composite.getReplacementComparator(composite.types, metadata.getReplacementOrdering(), metadata.getReplacementPriority());
+            //metadata.comparator = replacementComparator;
+            this.map = new TreeMap<ByteBuffer, Column>(replacementComparator);
+        }
+        else
+        {
+            this.map = new TreeMap<ByteBuffer, Column>(metadata.comparator);
+        }
     }
 
     private TreeMapBackedSortedColumns(CFMetaData metadata, SortedMap<ByteBuffer, Column> columns)
@@ -82,7 +97,47 @@ public class TreeMapBackedSortedColumns extends AbstractThreadUnsafeSortedColumn
     */
     public void addColumn(Column column, Allocator allocator)
     {
-        ByteBuffer name = column.name();
+        String CFName = metadata.cfName;
+        ByteBuffer name = column.name;
+//        logger.info("CFName : {}", CFName);
+//        logger.info("Column Name : {}", name.hashCode());
+
+        if(metadata.getReplacementOrdering() >= 0)
+        {
+            List<AbstractCompositeType.CompositeComponent> columnList;
+
+//            logger.info("Comparator Name : {}", new String(metadata.comparator.toString().trim()));
+            CompositeType composite = (CompositeType)metadata.comparator;
+//            logger.info("composite.getString(name) : {}", new String(composite.getString(name)));
+
+            columnList = composite.deconstructForReplacement(name, metadata.getReplacementOrdering(), metadata.getReplacementPriority(), metadata.getReplacementCql());
+//            logger.info("Components Size : {}", columnList.size());
+
+            ByteBuffer replacementKey = composite.replacementKey;
+            name = replacementKey;
+
+            column.orderingPriority = columnList;
+
+            Column existingColumn = map.get(name);
+            if(existingColumn != null)
+            {
+
+                //if(column.orderingPriority.get(0).comparator.compose(column.orderingPriority.get(0).value).compareTo(existingColumn.orderingPriority.get(0).comparator.compose(existingColumn.orderingPriority.get(0).value)) < 0)
+                for(int i=0; i < column.orderingPriority.size(); i++)
+                {
+                    if(column.orderingPriority.get(i).comparator.compare(column.orderingPriority.get(i).value, existingColumn.orderingPriority.get(i).value) < 0)
+                    {
+                        return;
+                    }
+                    if(column.orderingPriority.get(i).comparator.compare(column.orderingPriority.get(i).value, existingColumn.orderingPriority.get(i).value) > 0)
+                    {
+                        map.remove(name);
+                        break;
+                    }
+                }
+            }
+        }
+//        ByteBuffer name = column.name();
         // this is a slightly unusual way to structure this; a more natural way is shown in ThreadSafeSortedColumns,
         // but TreeMap lacks putAbsent.  Rather than split it into a "get, then put" check, we do it as follows,
         // which saves the extra "get" in the no-conflict case [for both normal and super columns],
