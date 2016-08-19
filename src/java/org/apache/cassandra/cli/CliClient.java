@@ -143,6 +143,9 @@ public class CliClient
         DEFAULT_TIME_TO_LIVE,
         SPECULATIVE_RETRY,
         POPULATE_IO_CACHE_ON_FLUSH,
+        REPLACEMENT_ORDERING,
+        REPLACEMENT_PRIORITY,
+        REPLACEMENT_CQL
     }
 
     private static final String DEFAULT_PLACEMENT_STRATEGY = "org.apache.cassandra.locator.NetworkTopologyStrategy";
@@ -1359,6 +1362,30 @@ public class CliClient
             case POPULATE_IO_CACHE_ON_FLUSH:
                 cfDef.setPopulate_io_cache_on_flush(Boolean.parseBoolean(mValue));
                 break;
+            case REPLACEMENT_ORDERING:
+                int replacement_ordering = Integer.parseInt(mValue);
+
+                if (replacement_ordering < 0 )
+                    throw new RuntimeException("Error: replacement_ordering should be greater than 0.");
+
+                cfDef.setReplacement_ordering(replacement_ordering);
+                break;
+            case REPLACEMENT_PRIORITY:
+                int replacement_priority = Integer.parseInt(mValue);
+
+                if (replacement_priority < 0 )
+                    throw new RuntimeException("Error: replacement_priority should be greater than 0.");
+
+                cfDef.setReplacement_priority(replacement_priority);
+                break;
+            case REPLACEMENT_CQL:
+                int replacement_cql = Integer.parseInt(mValue);
+
+                if (replacement_cql < 0 )
+                    throw new RuntimeException("Error: replacement_cql should be greater than 0.");
+
+                cfDef.setReplacement_cql(replacement_cql);
+                break;
             default:
                 //must match one of the above or we'd throw an exception at the valueOf statement above.
                 assert(false);
@@ -1810,6 +1837,9 @@ public class CliClient
                     normaliseType(cfDef.key_validation_class, "org.apache.cassandra.db.marshal"));
 
         writeAttr(output, false, "read_repair_chance", cfDef.read_repair_chance);
+        writeAttr(output, false, "replacement_ordering", cfDef.replacement_ordering);
+        writeAttr(output, false, "replacement_priority", cfDef.replacement_priority);
+        writeAttr(output, false, "replacement_cql", cfDef.replacement_cql);
         writeAttr(output, false, "dclocal_read_repair_chance", cfDef.dclocal_read_repair_chance);
         writeAttr(output, false, "populate_io_cache_on_flush", cfDef.populate_io_cache_on_flush);
         writeAttr(output, false, "gc_grace", cfDef.gc_grace_seconds);
@@ -2183,6 +2213,9 @@ public class CliClient
         sessionState.out.printf("      GC grace seconds: %s%n", cf_def.gc_grace_seconds);
         sessionState.out.printf("      Compaction min/max thresholds: %s/%s%n", cf_def.min_compaction_threshold, cf_def.max_compaction_threshold);
         sessionState.out.printf("      Read repair chance: %s%n", cf_def.read_repair_chance);
+        sessionState.out.printf("      Replacement ordering: %s%n", cf_def.replacement_ordering);
+        sessionState.out.printf("      Replacement Priority: %s%n", cf_def.replacement_priority);
+        sessionState.out.printf("      Replacement Cql: %s%n", cf_def.replacement_cql);
         sessionState.out.printf("      DC Local Read repair chance: %s%n", cf_def.dclocal_read_repair_chance);
         sessionState.out.printf("      Populate IO Cache on flush: %b%n", cf_def.populate_io_cache_on_flush);
         sessionState.out.printf("      Replicate on write: %s%n", cf_def.replicate_on_write);
